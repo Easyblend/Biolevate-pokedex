@@ -1,44 +1,20 @@
 /**
- * Query parser
- *
- * The parser separates:
- *
- * 1. Explicit filters
- *    - types
- *    - abilities
- *    - moves
- *    - species metadata
- *
- * 2. Ranking preferences
- *    - stats such as speed / attack / defense
- *
- * 3. Remaining lexical terms
- *    - useful for name matching and future concept search
- *
- * Example:
- *
- * "fast electric pokemon"
- *
- * {
- *   types: ["electric"],
- *   stat: {
- *     name: "speed",
- *     direction: "desc"
- *   }
- * }
- *
- * Example:
- *
- * "a blue electric pokemon that lives in water"
- *
- * {
- *   types: ["electric"],
- *   species: {
- *     colors: ["blue"],
- *     habitats: ["water"]
- *   }
- * }
+ *Aime of this file is to return an object like this:
+  *
+  * Parsed query: {
+  raw: 'fast electric pokemon',
+  normalized: 'fast electric pokemon',
+  terms: [ 'fast', 'electric' ],
+  intent: 'type',
+  types: [ 'electric' ],
+  abilities: [],
+  moves: [],
+  species: { colors: [], habitats: [], genera: [] },
+  stat: { name: 'speed', direction: 'desc' }
+}
+  for the query "fast electric pokemon".
  */
+
 
 import pokemonData from "@/app/data/pokedex.json";
 import type { PokemonStats } from "@/app/types/pokemon";
@@ -63,18 +39,11 @@ export type SpeciesFilters = {
   genera: string[];
 };
 
-export type SearchQuery = {
+export type QueryParsed = {
   raw: string;
   normalized: string;
   terms: string[];
 
-  /**
-   * Kept for backwards compatibility / UI explanation.
-   *
-   * This should not be treated as the complete description
-   * of the query because a query can contain multiple
-   * kinds of constraints.
-   */
   intent: SearchIntent;
 
   types: string[];
@@ -198,21 +167,8 @@ const ascendingStatTerms = new Set([
    HELPERS
    ========================================================= */
 
-/**
- * Find all known moves contained in the normalized query.
- *
- * We return multiple moves instead of stopping at the first
- * match.
- *
- * Example:
- *
- * "sleep powder and toxic"
- *
- * -> ["sleep powder", "toxic"]
- */
-
 // no sleep powder and toxic
-// function findKnownMoves(
+// function findMoves(
 //   normalizedQuery: string
 // ): string[] {
 //   return Array.from(knownMoves)
@@ -223,14 +179,17 @@ const ascendingStatTerms = new Set([
 //       (a, b) => b.length - a.length
 //     );
 // }
-function findKnownMoves(
+
+function findMoves(
   normalizedQuery: string
 ): string[] {
+  if(normalizedQuery.length < 3) {
+    return [];
+  }
   return Array.from(knownMoves)
     .filter((move) => {
       return (
         move === normalizedQuery ||
-        move.includes(normalizedQuery) ||
         normalizedQuery.includes(move)
       );
     })
@@ -244,10 +203,10 @@ function findKnownMoves(
     });
 }
 
-/**
- * Find all known abilities contained in the query.
- */
-function findKnownAbilities(
+
+// For : fast electric pokemon with levitate and chlorophyll
+// known ability : ["levitate", "chlorophyll"]
+function findAbilities(
   normalizedQuery: string
 ): string[] {
   return Array.from(knownAbilities)
@@ -258,22 +217,12 @@ function findKnownAbilities(
       (a, b) => b.length - a.length
     );
 }
+console.log("Known abilities:", findAbilities("fast electric pokemon with levitate and chlorophyll"));
 
-/**
- * Find stat preference.
- *
- * "fast pokemon"
- * -> speed / desc
- *
- * "slow pokemon"
- * -> speed / asc
- *
- * "strong pokemon"
- * -> attack / desc
- */
-function findStat(
+// Known stats: { name: 'speed', direction: 'desc' }
+function findStats(
   terms: string[]
-): SearchQuery["stat"] | undefined {
+): QueryParsed["stat"] | undefined {
   for (const [alias, stat] of Object.entries(
     statAliases
   )) {
@@ -286,10 +235,10 @@ function findStat(
     )
       ? "desc"
       : terms.some((term) =>
-          ascendingStatTerms.has(term)
-        )
-      ? "asc"
-      : "desc";
+        ascendingStatTerms.has(term)
+      )
+        ? "asc"
+        : "desc";
 
     return {
       name: stat,
@@ -390,7 +339,7 @@ function findHabitats(
 /**
  * Find genus terms.
  *
- * The dataset contains values such as:
+ * The dataset genus contains values such as:
  *
  * "Turtle Pokémon"
  * "Mouse Pokémon"
@@ -411,33 +360,16 @@ function findGenera(
     (genus) => {
       const genusTerms = tokenize(genus);
 
-      return null;
-    }
-  );
+      return terms.some((term) =>
+        genusTerms.includes(term)
+      );
+    });
 }
 
 /* =========================================================
    TYPE DETECTION
    ========================================================= */
 
-/**
- * Determine which known Pokémon types are explicit
- * type constraints.
- *
- * Important:
- *
- * "blue electric pokemon that lives in water"
- *
- * should produce:
- *
- * types = ["electric"]
- *
- * NOT:
- *
- * types = ["electric", "water"]
- *
- * because "water" is being used in a habitat phrase.
- */
 function findTypes(
   normalizedQuery: string,
   terms: string[]
@@ -476,9 +408,10 @@ function detectIntent(
   abilities: string[],
   moves: string[],
   species: SpeciesFilters,
-  stat: SearchQuery["stat"],
+  stat: QueryParsed["stat"],
   normalizedQuery: string
 ): SearchIntent {
+
   if (types.length > 0) {
     return "type";
   }
@@ -503,7 +436,7 @@ function detectIntent(
     return "stat";
   }
 
-  if (normalizedQuery.length > 0) {
+  if (normalizedQuery.length > 3) {
     return "name";
   }
 
@@ -516,7 +449,7 @@ function detectIntent(
 
 export function parseQuery(
   query: string
-): SearchQuery {
+): QueryParsed {
   const normalized =
     normalizeText(query);
 
@@ -549,12 +482,12 @@ export function parseQuery(
   );
 
   const abilities =
-    findKnownAbilities(normalized);
+    findAbilities(normalized);
 
   const moves =
-    findKnownMoves(normalized);
+    findMoves(normalized);
 
-  const stat = findStat(terms);
+  const stat = findStats(terms);
 
   const intent = detectIntent(
     types,

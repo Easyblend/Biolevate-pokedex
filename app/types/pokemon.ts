@@ -47,3 +47,10 @@ export type Pokedex = {
   };
   pokemon: Pokemon[];
 };
+
+export type RankedResult = {
+  pokemon: Pokemon;
+  score: number;
+  matchReasons: string[];
+};
+

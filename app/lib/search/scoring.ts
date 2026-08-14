@@ -1,5 +1,5 @@
 import type { Pokemon } from "@/app/types/pokemon";
-import type { SearchQuery } from "./query-parser";
+import type { QueryParsed } from "./query-parser";
 import { normalizeText } from "./normalize";
 
 export type ScoredResult = {
@@ -32,35 +32,35 @@ function formatStatName(
  */
 function scoreNameMatch(
   pokemon: Pokemon,
-  query: SearchQuery
+  parsedQuery: QueryParsed
 ): {
   score: number;
   reasons: string[];
 } {
   const name = normalizeText(pokemon.name);
 
-  if (!query.normalized) {
+  if (!parsedQuery.normalized || parsedQuery.normalized.length < 3) {
     return {
       score: 0,
       reasons: [],
     };
   }
 
-  if (name === query.normalized) {
+  if (name === parsedQuery.normalized) {
     return {
       score: 100,
       reasons: ["Exact name match"],
     };
   }
 
-  if (name.startsWith(query.normalized)) {
+  if (name.startsWith(parsedQuery.normalized)) {
     return {
       score: 80,
       reasons: ["Name starts with your search"],
     };
   }
 
-  if (name.includes(query.normalized)) {
+  if (name.includes(parsedQuery.normalized)) {
     return {
       score: 60,
       reasons: ["Name contains your search"],
@@ -76,7 +76,7 @@ function scoreNameMatch(
    * The full query doesn't equal "bulbasaur",
    * but "bulba" is still relevant to the name.
    */
-  const matchedTerms = query.terms.filter(
+  const matchedTerms = parsedQuery.terms.filter(
     (term) =>
       term.length >= 3 &&
       name.includes(term)
@@ -106,14 +106,10 @@ function scoreNameMatch(
  * ---------------------------------------------------------
  * TYPE
  * ---------------------------------------------------------
- *
- * Type is already a hard filter.
- * The score is mainly useful for explaining/reinforcing
- * the relevance.
  */
 function scoreTypeMatch(
   pokemon: Pokemon,
-  query: SearchQuery
+  query: QueryParsed
 ): {
   score: number;
   reasons: string[];
@@ -154,7 +150,7 @@ function scoreTypeMatch(
  */
 function scoreAbilityMatch(
   pokemon: Pokemon,
-  query: SearchQuery
+  query: QueryParsed
 ): {
   score: number;
   reasons: string[];
@@ -174,13 +170,6 @@ function scoreAbilityMatch(
       pokemonAbilities.includes(ability)
     );
 
-  if (matchedAbilities.length === 0) {
-    return {
-      score: 0,
-      reasons: [],
-    };
-  }
-
   return {
     score: matchedAbilities.length * 35,
     reasons: matchedAbilities.map(
@@ -197,7 +186,7 @@ function scoreAbilityMatch(
  */
 function scoreMoveMatch(
   pokemon: Pokemon,
-  query: SearchQuery
+  query: QueryParsed
 ): {
   score: number;
   reasons: string[];
@@ -264,7 +253,7 @@ function scoreMoveMatch(
  */
 function scoreSpeciesMetadata(
   pokemon: Pokemon,
-  query: SearchQuery
+  query: QueryParsed
 ): {
   score: number;
   reasons: string[];
@@ -359,7 +348,7 @@ function scoreSpeciesMetadata(
  */
 function scoreDescriptionMatch(
   _pokemon: Pokemon,
-  _query: SearchQuery
+  _query: QueryParsed
 ): {
   score: number;
   reasons: string[];
@@ -386,7 +375,7 @@ function scoreDescriptionMatch(
  */
 function scoreStatMatch(
   pokemon: Pokemon,
-  query: SearchQuery
+  query: QueryParsed
 ): {
   score: number;
   reasons: string[];
@@ -436,7 +425,7 @@ function scoreStatMatch(
  */
 export function scorePokemon(
   pokemon: Pokemon,
-  query: SearchQuery
+  query: QueryParsed
 ): ScoredResult {
   let score = 0;
   const matchReasons: string[] = [];
