@@ -6,7 +6,8 @@ import SearchResults from "./components/SearchResults";
 import type { ScoredResult } from "./lib/search/scoring";
 
 export default function Home() {
-  const [query, setQuery] = useState("");
+  const [input, setInput] = useState("");
+  const [searchedQuery, setSearchedQuery] = useState("");
   const [results, setResults] = useState<ScoredResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -28,7 +29,7 @@ export default function Home() {
         return;
       }
 
-      setQuery(data.query);
+      setSearchedQuery(data.query);
       setResults(data.results);
     } catch {
       setError("Unable to connect to the search service.");
@@ -57,8 +58,8 @@ export default function Home() {
         </header>
 
         <SearchBar
-          query={query}
-          onQueryChange={setQuery}
+          query={input}
+          onQueryChange={setInput}
           onSearch={handleSearch}
         />
 
@@ -67,7 +68,7 @@ export default function Home() {
             <button
               key={example}
               onClick={() => {
-                setQuery(example);
+                setInput(example);
                 handleSearch(example);
               }}
               className="rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-600 transition hover:border-zinc-300 hover:text-zinc-900"
@@ -90,14 +91,14 @@ export default function Home() {
             </div>
           )}
 
-          {!loading && !error && query && (
+          {!loading && !error && searchedQuery && (
             <SearchResults
               results={results}
-              query={query}
+              query={searchedQuery}
             />
           )}
 
-          {!loading && !error && !query && (
+          {!loading && !error && !searchedQuery && (
             <div className="py-16 text-center text-sm text-zinc-400">
               Start searching to explore the Pokédex.
             </div>
