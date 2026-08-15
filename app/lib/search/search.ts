@@ -1,5 +1,4 @@
-// This becomes the public interface to our entire search engine.
-
+// This becomes the interface to our entire search engine.
 import pokemonData from "@/app/data/pokedex.json";
 import type { Pokemon } from "@/app/types/pokemon";
 import { normalizeText } from "./normalize";
@@ -69,7 +68,7 @@ function retrieveCandidates(
 export function search(queryText: string): ScoredResult[] {
   const query = parseQuery(queryText);
 
-  console.log("Parsed query:", query);
+  // console.log("Parsed query:", query);
   if (!query.normalized) {
     return [];
   }

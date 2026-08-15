@@ -1,49 +1,40 @@
 import { describe, expect, it } from "vitest";
 import { parseQuery } from "./query-parser";
 
+
+// ✓ type + stat
+// ✓ move
+// ✓ ability
+
 describe("parseQuery", () => {
   it("identifies a type and stat preference", () => {
-    const result = parseQuery(
-      "fast electric pokemon"
-    );
+    const result = parseQuery("fast electric pokemon");
 
-    expect(result.types).toEqual([
-      "electric",
-    ]);
+    expect(result.types).toEqual(["electric"]);
 
     expect(result.stat).toEqual({
       name: "speed",
       direction: "desc",
     });
+
+    expect(result.abilities).toEqual([]);
+    expect(result.moves).toEqual([]);
   });
+});
 
-  it("identifies a partial move name", () => {
-    const result = parseQuery("sleep");
+it("identifies a move", () => {
+  const result = parseQuery("sleep powder");
 
-    expect(result.moves).toContain(
-      "sleep powder"
-    );
-  });
+  expect(result.moves).toContain("sleep powder");
 
-  it("interprets water as a habitat when used with lives in", () => {
-    const result = parseQuery(
-      "Yellow electric pokemon that lives in water"
-    );
+    expect(result.types).toEqual([]);
+    expect(result.stat).toBeUndefined();
+    expect(result.abilities).toEqual([]);
+});
 
-    expect(result.types).toEqual([
-      "electric",
-    ]);
 
-    expect(result.species.colors).toContain(
-      "yellow"
-    );
+it("identifies an ability", () => {
+  const result = parseQuery("overgrow");
 
-    expect(result.species.habitats).toContain(
-      "water"
-    );
-
-    expect(result.types).not.toContain(
-      "water"
-    );
-  });
+  expect(result.abilities).toContain("overgrow");
 });

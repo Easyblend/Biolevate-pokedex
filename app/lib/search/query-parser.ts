@@ -217,7 +217,6 @@ function findAbilities(
       (a, b) => b.length - a.length
     );
 }
-console.log("Known abilities:", findAbilities("fast electric pokemon with levitate and chlorophyll"));
 
 // Known stats: { name: 'speed', direction: 'desc' }
 function findStats(
@@ -268,18 +267,6 @@ function findColors(
   );
 }
 
-/**
- * Extract explicit habitat constraints.
- *
- * We intentionally support contextual phrases such as:
- *
- * "lives in water"
- * "found in water"
- * "lives near water"
- *
- * rather than blindly treating every occurrence of
- * "water" as the Water Pokémon type.
- */
 function findHabitats(
   normalizedQuery: string,
   terms: string[]

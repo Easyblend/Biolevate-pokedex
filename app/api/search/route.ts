@@ -3,7 +3,7 @@ import { search } from "@/app/lib/search/search";
 
 export async function GET(request: NextRequest) {
   try {
-    const query = request.nextUrl.searchParams.get("q")?.trim();
+    const query = new URL(request.url).searchParams.get("q")?.trim();
 
     if (!query) {
       return NextResponse.json(
