@@ -9,6 +9,12 @@ The goal is not to dump raw data, but to help users find Pokémon even when they
 only remember part of a name, a type, a move, an ability, or a rough
 characteristic.
 
+## 🚀 Try it live
+
+**[👉 Open the live Pokedex](https://biolevate-pokedex.netlify.app)**
+
+No setup. No cloning. Just click and search. 😄
+
 ---
 
 ## Setup, run, and test
