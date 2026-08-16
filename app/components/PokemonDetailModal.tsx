@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { Pokemon } from "../types/pokemon";
 
 type PokemonDetailModalProps = {
@@ -17,7 +18,7 @@ function formatName(value: string | null): string {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function formatStatName(value: string | null) {
+function formatStatName(value: string | null): string {
   if (!value) {
     return "";
   }
@@ -32,6 +33,8 @@ export default function PokemonDetailModal({
   pokemon,
   onClose,
 }: PokemonDetailModalProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
@@ -101,7 +104,7 @@ export default function PokemonDetailModal({
             </p>
           </section>
 
-          {/* Physical / species info */}
+          {/* Physical / Profile */}
           <section>
             <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
               Profile
@@ -130,40 +133,102 @@ export default function PokemonDetailModal({
             </div>
           </section>
 
-          {/* Stats */}
+          {/* Species */}
+          <section>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
+                Species
+              </h3>
+
+              <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-500">
+                {formatName(pokemon.species.generation)}
+              </span>
+            </div>
+
+            <div className="mt-3 overflow-hidden rounded-2xl border border-zinc-200">
+              {/* Classification */}
+              <div className="grid grid-cols-2 divide-x divide-zinc-200 border-b border-zinc-200">
+                <SpeciesItem
+                  label="Classification"
+                  value={pokemon.species.genus}
+                />
+
+                <SpeciesItem
+                  label="Shape"
+                  value={formatName(pokemon.species.shape)}
+                />
+              </div>
+
+              {/* Generation / Evolution */}
+              <div className="grid grid-cols-2 divide-x divide-zinc-200 border-b border-zinc-200">
+                <SpeciesItem
+                  label="Generation"
+                  value={formatName(pokemon.species.generation)}
+                />
+
+                <SpeciesItem
+                  label="Evolution Chain"
+                  value={`#${pokemon.species.evolution_chain_id}`}
+                />
+              </div>
+
+              {/* Rarity */}
+              <div className="bg-zinc-50 p-4">
+                <p className="text-xs text-zinc-400">Rarity</p>
+
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {pokemon.species.is_legendary && (
+                    <span className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-medium text-white">
+                      ★ Legendary
+                    </span>
+                  )}
+
+                  {pokemon.species.is_mythical && (
+                    <span className="rounded-full border border-zinc-300 bg-white px-3 py-1 text-xs font-medium text-zinc-700">
+                      ✦ Mythical
+                    </span>
+                  )}
+
+                  {!pokemon.species.is_legendary &&
+                    !pokemon.species.is_mythical && (
+                      <span className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-500">
+                        Standard Pokémon
+                      </span>
+                    )}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Base Stats */}
           <section>
             <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400">
               Base stats
             </h3>
 
             <div className="mt-4 space-y-3">
-              {Object.entries(pokemon.stats).map(
-                ([stat, value]) => (
-                  <div key={stat}>
-                    <div className="mb-1 flex items-center justify-between text-xs">
-                      <span className="font-medium text-zinc-600">
-                        {formatStatName(stat)}
-                      </span>
+              {Object.entries(pokemon.stats).map(([stat, value]) => (
+                <div key={stat}>
+                  <div className="mb-1 flex items-center justify-between text-xs">
+                    <span className="font-medium text-zinc-600">
+                      {formatStatName(stat)}
+                    </span>
 
-                      <span className="font-semibold text-zinc-900">
-                        {value}
-                      </span>
-                    </div>
-
-                    <div className="h-2 overflow-hidden rounded-full bg-zinc-100">
-                      <div
-                        className="h-full rounded-full bg-zinc-900"
-                        style={{
-                          width: `${Math.min(
-                            (value / 150) * 100,
-                            100
-                          )}%`,
-                        }}
-                      />
-                    </div>
+                    <span className="font-semibold text-zinc-900">
+                      {value}
+                    </span>
                   </div>
-                )
-              )}
+
+                  <div className="h-2 overflow-hidden rounded-full bg-zinc-100">
+                    <div
+                      className="h-full rounded-full bg-zinc-900"
+                      style={{
+                        width: `${Math.min((value / 150) * 100, 100)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
 
@@ -198,7 +263,10 @@ export default function PokemonDetailModal({
             </div>
 
             <div className="mt-3 flex max-h-40 flex-wrap gap-2 overflow-y-auto">
-              {pokemon.moves.map((move) => (
+              {(isExpanded
+                ? pokemon.moves
+                : pokemon.moves.slice(0, 10)
+              ).map((move) => (
                 <span
                   key={move}
                   className="rounded-lg bg-zinc-100 px-2.5 py-1.5 text-xs text-zinc-600"
@@ -206,6 +274,18 @@ export default function PokemonDetailModal({
                   {formatName(move)}
                 </span>
               ))}
+
+              {pokemon.moves.length > 10 && (
+                <button
+                  type="button"
+                  onClick={() => setIsExpanded((current) => !current)}
+                  className="rounded-lg bg-zinc-800 px-2.5 py-1.5 text-xs text-zinc-100 transition hover:bg-zinc-700"
+                >
+                  {isExpanded
+                    ? "Show less"
+                    : `+${pokemon.moves.length - 10} more`}
+                </button>
+              )}
             </div>
           </section>
         </div>
@@ -224,7 +304,26 @@ function InfoItem({
   return (
     <div className="rounded-2xl bg-zinc-50 p-3">
       <p className="text-xs text-zinc-400">{label}</p>
+
       <p className="mt-1 text-sm font-medium text-zinc-800">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function SpeciesItem({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="bg-white p-4">
+      <p className="text-xs text-zinc-400">{label}</p>
+
+      <p className="mt-1 text-sm font-semibold text-zinc-800">
         {value}
       </p>
     </div>
