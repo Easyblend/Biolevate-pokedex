@@ -23,4 +23,10 @@ describe("search", () => {
       )
     ).toBe(true);
   });
+
+  it("returns no results for an unmatched query", () => {
+    const results = search("zzzznonexistentquery");
+
+    expect(results).toEqual([]);
+  });
 });

@@ -33,4 +33,17 @@ describe("GET /api/search", () => {
     expect(response.status).toBe(400);
     expect(data.error.code).toBe("INVALID_QUERY");
   });
+
+  it("returns 200 with empty results for an unmatched query", async () => {
+    const request = new Request(
+      "http://localhost:3000/api/search?q=zzzznonexistentquery"
+    );
+
+    const response = await GET(request as any);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.results).toEqual([]);
+    expect(data.total).toBe(0);
+  });
 });

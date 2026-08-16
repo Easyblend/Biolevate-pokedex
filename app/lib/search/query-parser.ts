@@ -167,19 +167,6 @@ const ascendingStatTerms = new Set([
    HELPERS
    ========================================================= */
 
-// no sleep powder and toxic
-// function findMoves(
-//   normalizedQuery: string
-// ): string[] {
-//   return Array.from(knownMoves)
-//     .filter((move) =>
-//       normalizedQuery.includes(move)
-//     )
-//     .sort(
-//       (a, b) => b.length - a.length
-//     );
-// }
-
 function findMoves(
   normalizedQuery: string
 ): string[] {

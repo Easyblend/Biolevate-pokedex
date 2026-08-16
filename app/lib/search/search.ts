@@ -68,7 +68,6 @@ function retrieveCandidates(
 export function search(queryText: string): ScoredResult[] {
   const query = parseQuery(queryText);
 
-  // console.log("Parsed query:", query);
   if (!query.normalized) {
     return [];
   }

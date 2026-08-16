@@ -327,40 +327,6 @@ function scoreSpeciesMetadata(
 
 /**
  * ---------------------------------------------------------
- * DESCRIPTION
- * ---------------------------------------------------------
- *
- * IMPORTANT:
- *
- * We intentionally DO NOT perform generic description
- * keyword matching here.
- *
- * A query such as:
- *
- * "a pokemon that can swim"
- *
- * contains common words such as "a", "that", and "can".
- *
- * Blindly matching those words produces terrible ranking.
- *
- * Description search should eventually be handled through
- * a concept layer, not raw substring matching.
- */
-function scoreDescriptionMatch(
-  _pokemon: Pokemon,
-  _query: QueryParsed
-): {
-  score: number;
-  reasons: string[];
-} {
-  return {
-    score: 0,
-    reasons: [],
-  };
-}
-
-/**
- * ---------------------------------------------------------
  * STAT
  * ---------------------------------------------------------
  *
@@ -407,7 +373,7 @@ function scoreStatMatch(
 
   const preferenceScore =
     query.stat.direction === "desc"
-      ? normalized * 30
+      ? normalized * 120
       : (1 - normalized) * 30;
 
   return {
@@ -477,18 +443,6 @@ export function scorePokemon(
   score += speciesMatch.score;
   matchReasons.push(
     ...speciesMatch.reasons
-  );
-
-  /**
-   * Description intentionally disabled
-   * until we have concept-based retrieval.
-   */
-  const descriptionMatch =
-    scoreDescriptionMatch(pokemon, query);
-
-  score += descriptionMatch.score;
-  matchReasons.push(
-    ...descriptionMatch.reasons
   );
 
   /**
