@@ -44,7 +44,7 @@ export type QueryParsed = {
   normalized: string;
   terms: string[];
 
-  intent: SearchIntent;
+  intent: SearchIntent[];
 
   types: string[];
   abilities: string[];
@@ -177,7 +177,8 @@ function findMoves(
     .filter((move) => {
       return (
         move === normalizedQuery ||
-        normalizedQuery.includes(move)
+        normalizedQuery.includes(move) ||
+        move.startsWith(normalizedQuery)
       );
     })
     .sort((a, b) => {
@@ -384,18 +385,19 @@ function detectIntent(
   species: SpeciesFilters,
   stat: QueryParsed["stat"],
   normalizedQuery: string
-): SearchIntent {
+): SearchIntent[] {
 
+  const allIntents: SearchIntent[] = [];
   if (types.length > 0) {
-    return "type";
+    allIntents.push("type");
   }
 
   if (abilities.length > 0) {
-    return "ability";
+    allIntents.push("ability");
   }
 
   if (moves.length > 0) {
-    return "move";
+    allIntents.push("move");
   }
 
   if (
@@ -403,18 +405,18 @@ function detectIntent(
     species.habitats.length > 0 ||
     species.genera.length > 0
   ) {
-    return "species";
+    allIntents.push("species");
   }
 
   if (stat) {
-    return "stat";
+    allIntents.push("stat");
   }
 
-  if (normalizedQuery.length > 3) {
-    return "name";
+  if (normalizedQuery.length > 3 && allIntents.length === 0) {
+    allIntents.push("general");
   }
 
-  return "general";
+  return allIntents;
 }
 
 /* =========================================================
